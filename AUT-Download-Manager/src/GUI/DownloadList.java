@@ -3,6 +3,7 @@ package GUI;
 import javafx.scene.control.Cell;
 
 import javax.swing.*;
+import javax.swing.plaf.BorderUIResource;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,156 +12,60 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 
 //TODO:Not so sure whether should I use the File class as Generic Type
-public class DownloadList extends JList<File> {
+public class DownloadList extends JList<Entity> {
     public static final String ICON_PACK = "./Icons/";
-    public static final Dimension COMMAND_ICON_DIMENSION = new Dimension(10, 10);
+    public static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
 
     private JList<File> downloadList;
     private File[] downloadListArray;
 
-    private DownloadList() {
-        downloadList = new DownloadList();
-        downloadList.setBackground(new Color(255, 255, 255));
-        downloadList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        downloadList.setVisibleRowCount(-1);
-        downloadList.setCellRenderer(new CellRenderer());
-        downloadList.addMouseListener(new CustomMouseAdapter());
+    public DownloadList(DefaultListModel<Entity> listModel) {
+        super(listModel);
+        setBackground(new Color(255, 255, 255));
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        setBorder(new BorderUIResource.LineBorderUIResource(Color.GRAY));
+        setVisibleRowCount(-1);
+        setCellRenderer(new CellRenderer());
     }
 
-    private class CustomMouseAdapter extends MouseAdapter {
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getButton() == MouseEvent.BUTTON2) {
-
-            }
-        }
-
-        private class DownloadInfo extends JPanel implements ActionListener {
-            FileName fileName;
-            JTextField downloadDir;
-            SaveTo saveTo;
-            JLabel fileType;
-            JLabel size;
-            JLabel downloadStatues;
-            JButton ok;
-
-            DownloadInfo(String fileName, String fileType, String downloadDir, String size, String downloadStatues, String saveDir) {
-                setLayout(new GridLayout(7, 2));
-
-                this.fileName = new FileName(fileName, fileType);
-                add(this.fileName);
-
-                add(new JLabel("File type:"),3);
-                this.fileType.setText(fileType);
-                add(this.fileType, 4);
-
-                add(new JLabel("File size:"),5);
-                this.size.setText(size);
-                add(this.size,6);
-
-                add(new JLabel("Download address:"), 7);
-                this.downloadDir.setText(downloadDir);
-                this.downloadDir.setEditable(false);
-                add(this.downloadDir,8);
-
-                add(new JLabel("Download statues:"),9);
-                this.downloadStatues.setText(downloadStatues);//TODO:Improvement(show the completion in percentage)
-                add(this.downloadStatues,10);
-
-                saveTo = new SaveTo(saveDir);
-                add(new JLabel("Save to:"),11);
-                add(saveTo,12);
-
-                add(ok,14);
-
-            }
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getSource() == ok) {
-                    setOpaque(false);
-                }
-            }
-
-            private class SaveTo extends JPanel implements ActionListener {
-                JTextField saveDir;
-                JButton changeSaveDir;
-
-                SaveTo(String saveDir) {
-                    setLayout(new FlowLayout());
-
-                    this.saveDir.setText(saveDir);
-                    this.saveDir.setEditable(false);
-                    add(this.saveDir);
-
-                    this.changeSaveDir.addActionListener(this);
-                }
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    if (e.getSource() == changeSaveDir) {
-                        JFileChooser fileChooser = new JFileChooser();
-                        fileChooser.setDialogTitle("Save To");
-                        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                        fileChooser.setAcceptAllFileFilterUsed(false);
-                        int choice = fileChooser.showOpenDialog(this);
-                        if (choice != JFileChooser.APPROVE_OPTION) return;
-                        saveDir.setText(fileChooser.getCurrentDirectory().getPath());
-                    }
-                }
-            }
-
-            private class FileName extends JPanel {
-                JLabel icon;
-                JLabel fileName;
-
-                FileName(String fileName, String fileType) {
-                    icon = new JLabel(fileName, new ImageIcon(), 1);//TODO:ImageIcon
-                    add(icon);
-
-                    this.fileName = new JLabel(fileName);
-                    add(this.fileName);
-                }
-            }
-        }
+    @Override
+    public String toString() {
+        return "Downloads";
     }
 
-    private class CellRenderer extends DownloadListContent implements ListCellRenderer {
+    private class CellRenderer extends DownloadListContent implements ListCellRenderer<Entity> {
 
         //TODO:Assign a Generic Type and complete the renderer
         CellRenderer() {
             setOpaque(true);
         }
-
         @Override
-        public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-
-
-            if (isSelected) {
-                setBackground(list.getSelectionBackground());
-                setForeground(list.getSelectionForeground());
-            } else {
-                setBackground(list.getBackground());
-                setForeground(list.getForeground());
-            }
-            setEnabled(list.isEnabled());
+        public Component getListCellRendererComponent(JList<? extends Entity> list, Entity value, int index, boolean isSelected, boolean cellHasFocus) {
+//            if (isSelected) {
+//                setBackground(list.getSelectionBackground());
+//                setForeground(list.getSelectionForeground());
+//            } else {
+//                setBackground(list.getBackground());
+//                setForeground(list.getForeground());
+//            }
+//            setEnabled(list.isEnabled());
             return this;
         }
     }
 
     private class DownloadListContent extends JPanel {
-        JButton fileIcon;
+        JLabel fileIcon;
         FileNameAndProgress fileNameAndProgress;
         CommandButtons commandButtons;
 
         DownloadListContent() {
             setLayout(new FlowLayout());
+            setBackground(Color.WHITE);
 
-            fileIcon = new JButton("", new ImageIcon());//TODO:fileIcon should differ between each download format
+            fileIcon = new JLabel(new ImageIcon(new ImageIcon(ICON_PACK + "internet.png").getImage().getScaledInstance(17,17,Image.SCALE_SMOOTH)));//TODO:fileIcon should differ between each download format
             add(fileIcon);
 
-            fileNameAndProgress = new FileNameAndProgress();
+            fileNameAndProgress = new FileNameAndProgress("downloading");
             add(fileNameAndProgress);
 
             commandButtons = new CommandButtons();
@@ -171,13 +76,18 @@ public class DownloadList extends JList<File> {
             private JLabel fileName;
             private JProgressBar downloadProgress;
 
-            FileNameAndProgress() {
+            FileNameAndProgress(String fileName) {//TODO:progress
                 setLayout(new GridLayout(2, 1));
+                setBackground(Color.WHITE);
 
-                fileName = new JLabel();
-                add(fileName);
+                this.fileName = new JLabel(fileName);
+                add(this.fileName);
 
-                downloadProgress = new JProgressBar();
+                downloadProgress = new JProgressBar(0,100);
+                downloadProgress.setValue(50);
+                downloadProgress.setStringPainted(true);
+                downloadProgress.setPreferredSize(new Dimension(700,1));
+                downloadProgress.setBorderPainted(false);
                 add(downloadProgress);
             }
 
@@ -205,22 +115,32 @@ public class DownloadList extends JList<File> {
 
             CommandButtons() {
                 setLayout(new FlowLayout());
+                setBackground(Color.WHITE);
 
-                resumeButton = new JButton("Resume");
+                resumeButton = new JButton();
+                resumeButton.setBackground(Color.WHITE);
+                resumeButton.setFocusable(false);
+                resumeButton.setBorderPainted(false);
                 resumeButton.setSize(COMMAND_ICON_DIMENSION);
-                resumeButton.setIcon(new ImageIcon(ICON_PACK + "play-button.png"));
+                resumeButton.setIcon(new ImageIcon(new ImageIcon(ICON_PACK + "play-button.png").getImage().getScaledInstance(17,17,Image.SCALE_SMOOTH)));
                 resumeButton.addActionListener(new ButtonActionListener());
                 add(resumeButton);
 
-                pauseButton = new JButton("Pause");
+                pauseButton = new JButton();
+                pauseButton.setFocusable(false);
+                pauseButton.setBorderPainted(false);
+                pauseButton.setBackground(Color.WHITE);
                 pauseButton.setSize(COMMAND_ICON_DIMENSION);
-                pauseButton.setIcon(new ImageIcon(ICON_PACK + "pause.png"));
+                pauseButton.setIcon(new ImageIcon(new ImageIcon(ICON_PACK + "pause.png").getImage().getScaledInstance(17,17,Image.SCALE_SMOOTH)));
                 pauseButton.addActionListener(new ButtonActionListener());
                 add(pauseButton);
 
-                stopButton = new JButton("Stop");
+                stopButton = new JButton();
+                stopButton.setFocusable(false);
+                stopButton.setBorderPainted(false);
+                stopButton.setBackground(Color.WHITE);
                 stopButton.setSize(COMMAND_ICON_DIMENSION);
-                stopButton.setIcon(new ImageIcon(ICON_PACK + "stop.png"));
+                stopButton.setIcon(new ImageIcon(new ImageIcon(ICON_PACK + "stop.png").getImage().getScaledInstance(17,17,Image.SCALE_SMOOTH)));
                 stopButton.addActionListener(new ButtonActionListener());
                 add(stopButton);
             }
