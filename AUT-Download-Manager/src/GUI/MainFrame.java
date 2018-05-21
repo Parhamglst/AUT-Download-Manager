@@ -2,12 +2,12 @@ package GUI;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 public class MainFrame extends JFrame {
+
+    private static MainFrame singleton;
+
     private MenuBar menuBar;
     private Toolbar toolbar;
     private Tabs tabs;
@@ -16,10 +16,10 @@ public class MainFrame extends JFrame {
     private DownloadList downloadList;
     private Completed completed;
 
-    public MainFrame(String title, DefaultListModel listModel) {
+    private MainFrame(String title, DefaultListModel downloadList, DefaultListModel completedList) {
         super(title);
         setLayout(new BorderLayout());
-        setSize(new Dimension(1080,600));
+        setSize(new Dimension(1080, 600));
         setBackground(Color.WHITE);
 
         menuBar = new MenuBar();
@@ -29,21 +29,21 @@ public class MainFrame extends JFrame {
         add(toolbar, BorderLayout.NORTH);
         toolbar.setVisible(true);
 
-        completed = new Completed(listModel);
+        completed = Completed.getInstance(completedList);
 
         mainPanel = new JPanel();
         mainPanel.setVisible(true);
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBackground(Color.WHITE);
-        downloadList = new DownloadList(listModel);
-        mainPanel.add(downloadList, BorderLayout.CENTER);
-        downloadList.setVisible(true);
-        downloadList.addMouseListener(new MainFrame.CustomMouseAdapter());
-        lists = downloadList;
+        this.downloadList = DownloadList.getIntsance(downloadList);
+        mainPanel.add(this.downloadList, BorderLayout.CENTER);
+        this.downloadList.setVisible(true);
+        this.downloadList.addMouseListener(new MainFrame.CustomMouseAdapter());
+        lists = this.downloadList;
         add(lists, BorderLayout.CENTER);
 
         DefaultListModel<JList> tabList = new DefaultListModel<>();
-        tabList.addElement(downloadList);
+        tabList.addElement(this.downloadList);
         tabList.addElement(completed);
 
         tabs = new Tabs(tabList);
@@ -51,12 +51,17 @@ public class MainFrame extends JFrame {
         tabs.getTabs().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(e.getButton() == 1 && e.getClickCount() == 1){
-                    if((tabs.getTabs().getSelectedValue()).toString().equals("Completed Downloads"))
-                        lists = completed;
-                    if((tabs.getTabs().getSelectedValue()).toString().equals("Downloads"))
-                        lists = downloadList;
+                if (e.getButton() == 1 && e.getClickCount() == 1) {
+                    if ((tabs.getTabs().getSelectedValue()).toString().equals("Completed Downloads")) {
+                        mainPanel.add(completed, BorderLayout.CENTER);
+                        mainPanel.updateUI();
+                    }
+                    if ((tabs.getTabs().getSelectedValue()).toString().equals("Downloads")) {
+                        lists = MainFrame.this.downloadList;
+                        mainPanel.add(DownloadList.getIntsance(downloadList), BorderLayout.CENTER);
+                    }
                 }
+                SwingUtilities.updateComponentTreeUI(mainPanel);
             }
         });
         tabs.setVisible(true);
@@ -64,8 +69,15 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    public static void setLookAndFeel(int choice){
-        switch (choice){
+    public static MainFrame getInstance(String title, DefaultListModel downloadList, DefaultListModel completedList) {
+        if (singleton == null) {
+            singleton = new MainFrame(title, downloadList, completedList);
+        }
+        return singleton;
+    }
+
+    public static void setLookAndFeel(int choice) {
+        switch (choice) {
             case 0:
                 return;
             case 1:
@@ -112,7 +124,7 @@ public class MainFrame extends JFrame {
         @Override
         public void mouseClicked(MouseEvent e) {
             if (e.getButton() == MouseEvent.BUTTON2) {
-                mainPanel.add(new DownloadInfo("dsa","dsa","dsa","dsa","dsa","dsa"),BorderLayout.EAST);
+                mainPanel.add(new DownloadInfo("dsa", "dsa", "dsa", "dsa", "dsa", "dsa"), BorderLayout.EAST);
             }
         }
     }
@@ -132,28 +144,28 @@ public class MainFrame extends JFrame {
             this.fileName = new FileName(fileName, fileType);
             add(this.fileName);
 
-            add(new JLabel("File type:"),3);
+            add(new JLabel("File type:"), 3);
             this.fileType.setText(fileType);
             add(this.fileType, 4);
 
-            add(new JLabel("File size:"),5);
+            add(new JLabel("File size:"), 5);
             this.size.setText(size);
-            add(this.size,6);
+            add(this.size, 6);
 
             add(new JLabel("Download address:"), 7);
             this.downloadDir.setText(downloadDir);
             this.downloadDir.setEditable(false);
-            add(this.downloadDir,8);
+            add(this.downloadDir, 8);
 
-            add(new JLabel("Download statues:"),9);
+            add(new JLabel("Download statues:"), 9);
             this.downloadStatues.setText(downloadStatues);//TODO:Improvement(show the completion in percentage)
-            add(this.downloadStatues,17);
+            add(this.downloadStatues, 17);
 
             saveTo = new SaveTo(saveDir);
-            add(new JLabel("Save to:"),11);
-            add(saveTo,12);
+            add(new JLabel("Save to:"), 11);
+            add(saveTo, 12);
 
-            add(ok,14);
+            add(ok, 14);
 
         }
 

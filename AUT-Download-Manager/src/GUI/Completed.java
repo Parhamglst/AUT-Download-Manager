@@ -16,10 +16,12 @@ public class Completed extends JList<Entity> {
     public static final String ICON_PACK = "./Icons/";
     public static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
 
+    private static Completed singleton;
+
     private JList<File> downloadList;
     private File[] downloadListArray;
 
-    public Completed(DefaultListModel<Entity> listModel) {
+    private Completed(DefaultListModel<Entity> listModel) {
         super(listModel);
         setBackground(new Color(255, 255, 255));
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -50,6 +52,13 @@ public class Completed extends JList<Entity> {
 //            setEnabled(list.isEnabled());
             return this;
         }
+    }
+
+    public static Completed getInstance(DefaultListModel<Entity> listModel){
+        if(singleton == null){
+            singleton = new Completed(listModel);
+        }
+        return singleton;
     }
 
     private class DownloadListContent extends JPanel {

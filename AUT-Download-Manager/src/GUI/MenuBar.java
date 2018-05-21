@@ -92,7 +92,7 @@ public class MenuBar extends JMenuBar implements ActionListener {
             System.exit(0);
         }
         if(e.getSource() == settings){
-            //TODO:open the settings page
+            Settings.getInstance();
         }
         if(e.getSource() == pause){
             //TODO:pause the download

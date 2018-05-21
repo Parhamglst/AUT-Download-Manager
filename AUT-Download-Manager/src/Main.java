@@ -11,7 +11,7 @@ public class Main {
         DefaultListModel<Entity> listModel = new DefaultListModel<>();
         listModel.addElement(new Entity("dsa", "dsa"));
         listModel.addElement(new Entity("dsa", "dsa"));
-        MainFrame gui = new MainFrame("Another Download Manager",listModel);
+        MainFrame gui = MainFrame.getInstance("Another Download Manager",listModel, listModel);
         gui.setLocationRelativeTo(null);
     }
 }

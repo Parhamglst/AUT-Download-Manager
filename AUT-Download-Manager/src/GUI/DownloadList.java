@@ -14,12 +14,11 @@ import java.io.File;
 //TODO:Not so sure whether should I use the File class as Generic Type
 public class DownloadList extends JList<Entity> {
     public static final String ICON_PACK = "./Icons/";
-    public static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
+    private static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
 
-    private JList<File> downloadList;
-    private File[] downloadListArray;
+    private static DownloadList singleton;
 
-    public DownloadList(DefaultListModel<Entity> listModel) {
+    protected DownloadList(DefaultListModel<Entity> listModel) {
         super(listModel);
         setBackground(new Color(255, 255, 255));
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -161,5 +160,11 @@ public class DownloadList extends JList<Entity> {
                 }
             }
         }
+    }
+    public static DownloadList getIntsance(DefaultListModel<Entity> listModel){
+        if(singleton == null){
+            singleton = new DownloadList(listModel);
+        }
+        return singleton;
     }
 }

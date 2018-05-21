@@ -91,7 +91,7 @@ public class Toolbar extends JToolBar implements ActionListener {
             //TODO:remove download
         }
         if(e.getSource() == settings){
-            new Settings();
+            Settings.getInstance();
         }
         if(e.getSource() == pause){
             //TODO:pause the download

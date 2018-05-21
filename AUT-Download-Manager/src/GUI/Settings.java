@@ -6,10 +6,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class Settings extends JFrame {
+    private static Settings singleton;
     private JLabel skin;
     private JComboBox<String> lookAndFeel;
 
-    public Settings() {
+    private Settings() {
         setLayout(new GridLayout(1, 2));
         setVisible(true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -37,7 +38,16 @@ public class Settings extends JFrame {
                     MainFrame.setLookAndFeel(3);
                 if (((String) lookAndFeel.getSelectedItem()).equals("Windows"))
                     MainFrame.setLookAndFeel(4);
+
+                SwingUtilities.updateComponentTreeUI(Settings.getInstance());
+                SwingUtilities.updateComponentTreeUI(MainFrame.getInstance(null,null,null));
             }
         });
+    }
+    public static Settings getInstance(){
+        if(singleton == null){
+            singleton = new Settings();
+        }
+        return singleton;
     }
 }
