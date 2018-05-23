@@ -3,25 +3,35 @@ package GUI;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
+/**
+ * The man GUI panel containing all the components
+ */
 public class MainFrame extends JFrame {
+    public static final String ICON_PACK = "./Icons/";
 
     private static MainFrame singleton;
 
     private MenuBar menuBar;
     private Toolbar toolbar;
-    private Tabs tabs;
+    private LogoAndTabs tabs;
     private JPanel mainPanel;
-    private JList lists;
     private DownloadList downloadList;
     private Completed completed;
+    private Queues queues;
 
-    private MainFrame(String title, DefaultListModel downloadList, DefaultListModel completedList) {
+    /**
+     * The constructor for instantiating the GUI
+     * @param title title of the download manager
+     * @param downloadListModel  the list model of download list which are not completed
+     * @param completedList the list model of completed download list
+     */
+    private MainFrame(String title, DefaultListModel downloadListModel, DefaultListModel completedList) {
         super(title);
         setLayout(new BorderLayout());
         setSize(new Dimension(1080, 600));
-        setBackground(Color.WHITE);
-
+        setBackground(Color.lightGray);
         menuBar = new MenuBar();
         setJMenuBar(menuBar);
 
@@ -31,40 +41,35 @@ public class MainFrame extends JFrame {
 
         completed = Completed.getInstance(completedList);
 
+        queues = Queues.getInstance();
+
         mainPanel = new JPanel();
+        setDefaultCloseOperation(HIDE_ON_CLOSE);
         mainPanel.setVisible(true);
         mainPanel.setLayout(new BorderLayout());
-        mainPanel.setBackground(Color.WHITE);
-        this.downloadList = DownloadList.getIntsance(downloadList);
-        mainPanel.add(this.downloadList, BorderLayout.CENTER);
+        mainPanel.setBackground(Color.lightGray);
+        this.downloadList = DownloadList.getIntsance(downloadListModel);
+        mainPanel.add(this.completed, BorderLayout.CENTER);
         this.downloadList.setVisible(true);
-        this.downloadList.addMouseListener(new MainFrame.CustomMouseAdapter());
-        lists = this.downloadList;
-        add(lists, BorderLayout.CENTER);
-
-        DefaultListModel<JList> tabList = new DefaultListModel<>();
-        tabList.addElement(this.downloadList);
-        tabList.addElement(completed);
-
-        tabs = new Tabs(tabList);
-        add(tabs, BorderLayout.WEST);
-        tabs.getTabs().addMouseListener(new MouseAdapter() {
+        add(this.downloadList, BorderLayout.CENTER);
+        addComponentListener(new ComponentAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getButton() == 1 && e.getClickCount() == 1) {
-                    if ((tabs.getTabs().getSelectedValue()).toString().equals("Completed Downloads")) {
-                        mainPanel.add(completed, BorderLayout.CENTER);
-                        mainPanel.updateUI();
-                    }
-                    if ((tabs.getTabs().getSelectedValue()).toString().equals("Downloads")) {
-                        lists = MainFrame.this.downloadList;
-                        mainPanel.add(DownloadList.getIntsance(downloadList), BorderLayout.CENTER);
-                    }
-                }
-                SwingUtilities.updateComponentTreeUI(mainPanel);
+            public void componentResized(ComponentEvent e) {
+                downloadList.setPreferredSize(new Dimension(getWidth() - 30, 50));
+                revalidate();
+                repaint();
             }
         });
-        tabs.setVisible(true);
+
+        DefaultListModel<Component> tabList = new DefaultListModel<>();
+        tabList.addElement(this.downloadList);
+        tabList.addElement(completed);
+        tabList.addElement(queues);
+
+        tabs = new LogoAndTabs(tabList,downloadListModel,completedList);
+        add(tabs, BorderLayout.WEST);
+
+        systemTray();
 
         setVisible(true);
     }
@@ -74,6 +79,34 @@ public class MainFrame extends JFrame {
             singleton = new MainFrame(title, downloadList, completedList);
         }
         return singleton;
+    }
+
+    public void systemTray(){
+        SystemTray st = SystemTray.getSystemTray();
+        TrayIcon ti = new TrayIcon(new ImageIcon(ICON_PACK + "download.png").getImage());
+        try {
+            st.add(ti);
+        } catch (AWTException e) {
+            e.printStackTrace();
+        }
+        ti.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setVisible(true);
+            }
+        });
+        PopupMenu popUp = new PopupMenu();
+        ti.setPopupMenu(popUp);
+        MenuItem exit = new MenuItem("Quit");
+        popUp.add(exit);
+        exit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if(e.getSource() == exit){
+                    System.exit(0);
+                }
+            }
+        });
     }
 
     public static void setLookAndFeel(int choice) {
@@ -111,110 +144,55 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private class LogoAndTabs extends JPanel{
+        private JLabel logo;
+        private Tabs tabs;
+
+        LogoAndTabs(DefaultListModel<Component> tabList, DefaultListModel downloadListModel, DefaultListModel completedList){
+            setLayout(new BorderLayout());
+            setBackground(Color.white);
+
+            logo = new JLabel(new ImageIcon(new ImageIcon(ICON_PACK + "A (Another Download Manager).png").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH)));
+            add(logo,BorderLayout.NORTH);
+
+            tabs = new Tabs(tabList);
+            tabs.setBorder(null);
+            add(tabs, BorderLayout.CENTER);
+
+            tabs.getTabs().addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getButton() == 1 && e.getClickCount() == 1) {
+                        if ((tabs.getTabs().getSelectedValue()).toString().equals("Completed Downloads")) {
+                            mainPanel.add(completed, BorderLayout.CENTER);
+                            mainPanel.remove(downloadList);
+                            downloadList.setVisible(false);
+                            completed.setVisible(true);
+                            mainPanel.updateUI();
+                            revalidate();
+                            repaint();
+                        }
+                        if ((tabs.getTabs().getSelectedValue()).toString().equals("Downloads")) {
+                            mainPanel.add(DownloadList.getIntsance(downloadListModel), BorderLayout.CENTER);
+                            mainPanel.remove(completed);
+                            completed.setVisible(false);
+                            downloadList.setVisible(true);
+                            mainPanel.updateUI();
+                            revalidate();
+                            repaint();
+                        }
+                    }
+                    SwingUtilities.updateComponentTreeUI(mainPanel);
+                }
+            });
+        }
+    }
+
     public JPanel getMainPanel() {
         return mainPanel;
     }
 
     public void setMainPanel(JPanel mainPanel) {
         this.mainPanel = mainPanel;
-    }
-
-    public class CustomMouseAdapter extends MouseAdapter {
-
-        @Override
-        public void mouseClicked(MouseEvent e) {
-            if (e.getButton() == MouseEvent.BUTTON2) {
-                mainPanel.add(new DownloadInfo("dsa", "dsa", "dsa", "dsa", "dsa", "dsa"), BorderLayout.EAST);
-            }
-        }
-    }
-
-    private class DownloadInfo extends JPanel implements ActionListener {
-        FileName fileName;
-        JTextField downloadDir;
-        SaveTo saveTo;
-        JLabel fileType;
-        JLabel size;
-        JLabel downloadStatues;
-        JButton ok;
-
-        DownloadInfo(String fileName, String fileType, String downloadDir, String size, String downloadStatues, String saveDir) {
-            setLayout(new GridLayout(7, 2));
-
-            this.fileName = new FileName(fileName, fileType);
-            add(this.fileName);
-
-            add(new JLabel("File type:"), 3);
-            this.fileType.setText(fileType);
-            add(this.fileType, 4);
-
-            add(new JLabel("File size:"), 5);
-            this.size.setText(size);
-            add(this.size, 6);
-
-            add(new JLabel("Download address:"), 7);
-            this.downloadDir.setText(downloadDir);
-            this.downloadDir.setEditable(false);
-            add(this.downloadDir, 8);
-
-            add(new JLabel("Download statues:"), 9);
-            this.downloadStatues.setText(downloadStatues);//TODO:Improvement(show the completion in percentage)
-            add(this.downloadStatues, 17);
-
-            saveTo = new SaveTo(saveDir);
-            add(new JLabel("Save to:"), 11);
-            add(saveTo, 12);
-
-            add(ok, 14);
-
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == ok) {
-                setOpaque(false);
-            }
-        }
-
-        private class SaveTo extends JPanel implements ActionListener {
-            JTextField saveDir;
-            JButton changeSaveDir;
-
-            SaveTo(String saveDir) {
-                setLayout(new FlowLayout());
-
-                this.saveDir.setText(saveDir);
-                this.saveDir.setEditable(false);
-                add(this.saveDir);
-
-                this.changeSaveDir.addActionListener(this);
-            }
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (e.getSource() == changeSaveDir) {
-                    JFileChooser fileChooser = new JFileChooser();
-                    fileChooser.setDialogTitle("Save To");
-                    fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-                    fileChooser.setAcceptAllFileFilterUsed(false);
-                    int choice = fileChooser.showOpenDialog(this);
-                    if (choice != JFileChooser.APPROVE_OPTION) return;
-                    saveDir.setText(fileChooser.getCurrentDirectory().getPath());
-                }
-            }
-        }
-
-        private class FileName extends JPanel {
-            JLabel icon;
-            JLabel fileName;
-
-            FileName(String fileName, String fileType) {
-                icon = new JLabel(fileName, new ImageIcon(), 1);//TODO:ImageIcon
-                add(icon);
-
-                this.fileName = new JLabel(fileName);
-                add(this.fileName);
-            }
-        }
     }
 }

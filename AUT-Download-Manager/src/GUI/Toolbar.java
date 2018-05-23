@@ -22,8 +22,6 @@ public class Toolbar extends JToolBar implements ActionListener {
         setBackground(Color.white);
         setRollover(false);
 
-        add(new JLabel(new ImageIcon(new ImageIcon(ICON_PACK + "A (Another Download Manager).png").getImage().getScaledInstance(40,40,Image.SCALE_SMOOTH))));
-
         newDownload = new JButton(new ImageIcon(new ImageIcon(ICON_PACK +"download.png").getImage().getScaledInstance(40,40,Image.SCALE_SMOOTH)));
         newDownload.setPreferredSize(TOOLBAR_BUTTONS_SIZE);
         newDownload.addActionListener(this);

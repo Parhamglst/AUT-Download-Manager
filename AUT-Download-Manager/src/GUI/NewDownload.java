@@ -4,8 +4,13 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
 
+/**
+ * New download panel for adding a new download
+ */
 public class NewDownload extends JFrame {
     private JPanel main;
     private JLabel url;
@@ -40,5 +45,11 @@ public class NewDownload extends JFrame {
 
         add = new JButton("Add");
         add(add);
+        add.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                //TODO:Add new Download
+            }
+        });
     }
 }

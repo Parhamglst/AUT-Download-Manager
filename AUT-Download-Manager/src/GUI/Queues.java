@@ -6,24 +6,33 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
+/**
+ * The panel for the list of queues, instantiated only once
+ */
 public class Queues extends JPanel {
     private static Queues singleton;
 
     private ArrayList<Queue> queues;
     private Integer numberOfQueues;
     private QueueOptions queueOptions;
-    private Queues (ArrayList<Queue> queues){
+    private Queues (){
         numberOfQueues = 0;
 
         setLayout(new BorderLayout());
 
         queueOptions = new QueueOptions();
         add(queueOptions,BorderLayout.NORTH);
+
+        queues = new ArrayList<>();
     }
 
-    public static final Queues getInstance(ArrayList queues){
+    /**
+     * the method for instantiating the queues
+     * @return
+     */
+    public static final Queues getInstance(){
         if(singleton == null){
-            singleton = new Queues(queues);
+            singleton = new Queues();
         }
         return singleton;
     }
@@ -33,6 +42,27 @@ public class Queues extends JPanel {
         queueOptions.getQueueList().addItem(queues.get(numberOfQueues - 1));
         numberOfQueues++;
         add(queues.get(numberOfQueues - 1), BorderLayout.CENTER);
+    }
+
+    @Override
+    public String toString() {
+        return "Queues";
+    }
+
+    private class Queue extends DownloadList{
+        private String name;
+        private DefaultListModel queueList;
+
+        Queue(String name, DefaultListModel<Entity> queueList){
+            super(queueList);
+            this.queueList = queueList;
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     private class QueueOptions extends JPanel{
@@ -48,7 +78,7 @@ public class Queues extends JPanel {
             newQueue.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    if(e.getSource() == this){
+                    if(e.getSource() == newQueue){
                         JFrame newQueue = new JFrame("New Queue");
                         newQueue.setLayout(new GridLayout(2,2));
                         newQueue.add(new JLabel("Queue Name: "));
@@ -56,8 +86,9 @@ public class Queues extends JPanel {
                         newQueue.add(queuesName);
 
                         JButton add = new JButton("Add");
-                        add(new JLabel(""));
-                        add(add);
+                        newQueue.add(new JLabel(""));
+                        newQueue.add(add);
+                        newQueue.setVisible(true);
                         add.addActionListener(new ActionListener() {
                             @Override
                             public void actionPerformed(ActionEvent e) {
@@ -77,22 +108,6 @@ public class Queues extends JPanel {
 
         public JComboBox getQueueList() {
             return queueList;
-        }
-    }
-
-    private class Queue extends DownloadList{
-        private String name;
-        private DefaultListModel queueList;
-
-        Queue(String name, DefaultListModel<Entity> queueList){
-            super(queueList);
-            this.queueList = queueList;
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
         }
     }
 }

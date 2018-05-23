@@ -4,6 +4,9 @@ import javax.swing.*;
 import javax.swing.plaf.BorderUIResource;
 import java.awt.*;
 
+/**
+ * Tbas class cotaining
+ */
 public class Tabs extends JPanel{
     private JList tabs;
     public Tabs(ListModel tabList){

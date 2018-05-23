@@ -6,6 +6,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 
+import static GUI.Completed.COMMAND_ICON_DIMENSION;
+import static GUI.Completed.ICON_PACK;
+
 public class MenuBar extends JMenuBar implements ActionListener {
     private JMenuItem newDownload;
     private JMenuItem resume;
