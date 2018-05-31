@@ -1,8 +1,12 @@
 package GUI;
 
+import Utils.Download;
+import Utils.Downloads;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.ArrayList;
 
 /**
@@ -20,17 +24,18 @@ public class MainFrame extends JFrame {
     private DownloadList downloadList;
     private Completed completed;
     private Queues queues;
+    private DefaultListModel<Download> incomplete;
+    private DefaultListModel<Download> completedDownloads;
 
     /**
      * The constructor for instantiating the GUI
      * @param title title of the download manager
-     * @param downloadListModel  the list model of download list which are not completed
-     * @param completedList the list model of completed download list
      */
-    private MainFrame(String title, DefaultListModel downloadListModel, DefaultListModel completedList) {
+    private MainFrame(String title) {
         super(title);
+        Dimension resolution = new Dimension(Toolkit.getDefaultToolkit().getScreenSize());
         setLayout(new BorderLayout());
-        setSize(new Dimension(1080, 600));
+        setSize(new Dimension((int)(resolution.getWidth()*5/8), (int)(resolution.getHeight()*3/5)));
         setBackground(Color.lightGray);
         menuBar = new MenuBar();
         setJMenuBar(menuBar);
@@ -39,7 +44,13 @@ public class MainFrame extends JFrame {
         add(toolbar, BorderLayout.NORTH);
         toolbar.setVisible(true);
 
-        completed = Completed.getInstance(completedList);
+        loadCompletedDowloads();
+        loadDownloads();
+
+        completed = Completed.getInstance(completedDownloads);
+        JScrollPane completedSP = new JScrollPane(completed);
+        completedSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        completedSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         queues = Queues.getInstance();
 
@@ -48,10 +59,15 @@ public class MainFrame extends JFrame {
         mainPanel.setVisible(true);
         mainPanel.setLayout(new BorderLayout());
         mainPanel.setBackground(Color.lightGray);
-        this.downloadList = DownloadList.getIntsance(downloadListModel);
-        mainPanel.add(this.completed, BorderLayout.CENTER);
-        this.downloadList.setVisible(true);
-        add(this.downloadList, BorderLayout.CENTER);
+
+        this.downloadList = DownloadList.getInstance(incomplete);
+        JScrollPane incompleteSP = new JScrollPane(this.downloadList);
+        incompleteSP.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        incompleteSP.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+//        add(queues);
+        add(incompleteSP, BorderLayout.CENTER);
+        this.downloadList.setActivePanel(true);
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -66,7 +82,7 @@ public class MainFrame extends JFrame {
         tabList.addElement(completed);
         tabList.addElement(queues);
 
-        tabs = new LogoAndTabs(tabList,downloadListModel,completedList);
+        tabs = new LogoAndTabs(tabList,incomplete,completedDownloads);
         add(tabs, BorderLayout.WEST);
 
         systemTray();
@@ -74,11 +90,53 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    public static MainFrame getInstance(String title, DefaultListModel downloadList, DefaultListModel completedList) {
+    public static MainFrame getInstance(String title) {
         if (singleton == null) {
-            singleton = new MainFrame(title, downloadList, completedList);
+            singleton = new MainFrame(title);
         }
         return singleton;
+    }
+
+    public boolean loadDownloads(){
+        Downloads downloads = Downloads.getInstance();
+        try(ObjectInputStream in = new ObjectInputStream(new FileInputStream("./incomplete.jdm"))){
+            downloads.setActiveDownloads((ArrayList<Download>) in.readObject());
+            incomplete = new DefaultListModel<>();
+            for (Download download:
+                 downloads.getActiveDownloads()) {
+                incomplete.addElement(download);
+            }
+            return true;
+        } catch (IOException | ClassNotFoundException e) {
+            try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("./incomplete.jdm"))) {
+                outputStream.writeObject(downloads.getActiveDownloads());
+                incomplete = new DefaultListModel<>();
+            } catch (IOException e1) {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    public boolean loadCompletedDowloads(){
+        Downloads downloads = Downloads.getInstance();
+        try(ObjectInputStream in = new ObjectInputStream(new FileInputStream("./completed.jdm"))){
+            downloads.setCompletedDownloads((ArrayList<Download>) in.readObject());
+            completedDownloads = new DefaultListModel<>();
+            for (Download download:
+                    downloads.getActiveDownloads()) {
+                completedDownloads.addElement(download);
+            }
+            return true;
+        } catch (IOException | ClassNotFoundException e) {
+            try(ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("./completed.jdm"))) {
+                outputStream.writeObject(downloads.getCompletedDownloads());
+                completedDownloads = new DefaultListModel<>();
+            } catch (IOException e1) {
+                return false;
+            }
+            return true;
+        }
     }
 
     public void systemTray(){
@@ -152,7 +210,7 @@ public class MainFrame extends JFrame {
             setLayout(new BorderLayout());
             setBackground(Color.white);
 
-            logo = new JLabel(new ImageIcon(new ImageIcon(ICON_PACK + "A (Another Download Manager).png").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH)));
+            logo = new JLabel(new ImageIcon(new ImageIcon(ICON_PACK + "A2 (Another Download Manager).png").getImage().getScaledInstance(100,100,Image.SCALE_SMOOTH)));
             add(logo,BorderLayout.NORTH);
 
             tabs = new Tabs(tabList);
@@ -173,7 +231,7 @@ public class MainFrame extends JFrame {
                             repaint();
                         }
                         if ((tabs.getTabs().getSelectedValue()).toString().equals("Downloads")) {
-                            mainPanel.add(DownloadList.getIntsance(downloadListModel), BorderLayout.CENTER);
+                            mainPanel.add(DownloadList.getInstance(downloadListModel), BorderLayout.CENTER);
                             mainPanel.remove(completed);
                             completed.setVisible(false);
                             downloadList.setVisible(true);

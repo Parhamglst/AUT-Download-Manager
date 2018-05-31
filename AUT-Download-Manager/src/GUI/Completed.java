@@ -1,5 +1,8 @@
 package GUI;
 
+import Utils.Download;
+import Utils.Downloads;
+
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -7,22 +10,25 @@ import javax.swing.plaf.BorderUIResource;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.util.List;
 
 import static GUI.DownloadList.selectionBG;
 
 
 //TODO:Not so sure whether should I use the File class as Generic Type
-public class Completed extends JList<Entity> {
+public class Completed extends JList<Download> {
     public static final String ICON_PACK = "./Icons/";
     public static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
 
     private static Completed singleton;
 
+    private boolean activePanel;
+
     CellRenderer cellRenderer;
     private JList<File> Completed;
     private File[] CompletedArray;
 
-    private Completed(DefaultListModel<Entity> listModel) {
+    private Completed(DefaultListModel<Download> listModel) {
         super(listModel);
         setBackground(new Color(255, 255, 255));
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -68,10 +74,19 @@ public class Completed extends JList<Entity> {
 
             }
         });
-        addListSelectionListener(new ListSelectionListener() {
+
+        addKeyListener(new KeyAdapter() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-//                getCellRenderer().getListCellRendererComponent(null,null, getSelectedIndex(),true,true);
+            public void keyPressed(KeyEvent e) {
+                if(e.getSource().equals(KeyEvent.VK_DELETE)){
+                    Downloads downloads = Downloads.getInstance();
+                    List<Download> list = singleton.getSelectedValuesList();
+                    for (Download download:
+                            list) {
+                        downloads.remove(download,1);
+                    }
+                    MainFrame.getInstance(null).repaint();
+                }
             }
         });
     }
@@ -81,7 +96,22 @@ public class Completed extends JList<Entity> {
         return "Completed Downloads";
     }
 
-    private class CellRenderer extends CompletedContent implements ListCellRenderer<Entity> {
+    public static Completed getInstance(DefaultListModel<Download> listModel){
+        if(singleton == null){
+            singleton = new Completed(listModel);
+        }
+        return singleton;
+    }
+
+    public boolean isActivePanel() {
+        return activePanel;
+    }
+
+    public void setActivePanel(boolean activePanel) {
+        this.activePanel = activePanel;
+    }
+
+    private class CellRenderer extends CompletedContent implements ListCellRenderer<Download> {
 
         //TODO:Assign a Generic Type and complete the renderer
         CellRenderer() {
@@ -89,7 +119,7 @@ public class Completed extends JList<Entity> {
             setOpaque(true);
         }
         @Override
-        public Component getListCellRendererComponent(JList<? extends Entity> list, Entity value, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<? extends Download> list, Download value, int index, boolean isSelected, boolean cellHasFocus) {
             if (isSelected) {
                 setBackground(selectionBG);
                 setForeground(selectionBG);
@@ -103,13 +133,6 @@ public class Completed extends JList<Entity> {
 
             return this;
         }
-    }
-
-    public static Completed getInstance(DefaultListModel<Entity> listModel){
-        if(singleton == null){
-            singleton = new Completed(listModel);
-        }
-        return singleton;
     }
 
     private class CustomMenu extends JPopupMenu {

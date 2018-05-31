@@ -1,18 +1,21 @@
 package GUI;
 
+import Utils.Downloads;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 
 /**
  * New download panel for adding a new download
  */
 public class NewDownload extends JFrame {
-    private JPanel main;
     private JLabel url;
     private JTextField input;
     private JButton add;
@@ -48,7 +51,17 @@ public class NewDownload extends JFrame {
         add.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //TODO:Add new Download
+                Downloads.getInstance().newDownload(input.getText());
+                dispose();
+            }
+        });
+        input.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode()==KeyEvent.VK_ENTER) {
+                    Downloads.getInstance().newDownload(input.getText());
+                    dispose();
+                }
             }
         });
     }

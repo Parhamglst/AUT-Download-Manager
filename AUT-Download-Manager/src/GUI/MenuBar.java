@@ -1,13 +1,13 @@
 package GUI;
 
+import Utils.Download;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-
-import static GUI.Completed.COMMAND_ICON_DIMENSION;
-import static GUI.Completed.ICON_PACK;
+import java.util.ArrayList;
 
 public class MenuBar extends JMenuBar implements ActionListener {
     private JMenuItem newDownload;
@@ -18,6 +18,7 @@ public class MenuBar extends JMenuBar implements ActionListener {
     private JMenuItem settings;
     private JMenuItem quit;
     private JMenuItem about;
+    private ArrayList<Download> selectedItems;
 
 
     public MenuBar(){
@@ -80,6 +81,10 @@ public class MenuBar extends JMenuBar implements ActionListener {
         help.add(about);
     }
 
+    public void setSelectedItems(ArrayList<Download> selectedItems) {
+        this.selectedItems = selectedItems;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
         if(e.getSource() == newDownload){
@@ -95,7 +100,8 @@ public class MenuBar extends JMenuBar implements ActionListener {
             System.exit(0);
         }
         if(e.getSource() == settings){
-            Settings.getInstance();
+            Settings settings = Settings.getInstance();
+            settings.setVisible(true);
         }
         if(e.getSource() == pause){
             //TODO:pause the download

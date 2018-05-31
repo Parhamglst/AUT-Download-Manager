@@ -1,6 +1,8 @@
 package GUI;
 
-import javafx.scene.control.Cell;
+import Utils.Download;
+import Utils.Downloads;
+import com.sun.tools.javac.Main;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -8,23 +10,26 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.BorderUIResource;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 //TODO:Not so sure whether should I use the File class as Generic Type
 
 /**
  * The singleton class for the download lst containing the not-completed downloads
  */
-public class DownloadList extends JList<Entity> {
+public class DownloadList extends JList<Download> {
     public static final String ICON_PACK = "./Icons/";
     private static final Dimension COMMAND_ICON_DIMENSION = new Dimension(17, 17);
     public static Color selectionBG;
 
     private static DownloadList singleton;
 
+    private boolean activePanel;
+
     CellRenderer cellRenderer;
 
-    protected DownloadList(DefaultListModel<Entity> listModel) {
+    protected DownloadList(DefaultListModel<Download> listModel) {
         super(listModel);
         setBackground(new Color(255, 255, 255));
         selectionBG = getSelectionBackground();
@@ -74,10 +79,17 @@ public class DownloadList extends JList<Entity> {
 
             }
         });
-        addListSelectionListener(new ListSelectionListener() {
+        addKeyListener(new KeyAdapter() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-//                getCellRenderer().getListCellRendererComponent(null,null, getSelectedIndex(),true,true);
+            public void keyPressed(KeyEvent e) {
+                if(e.getKeyCode() == KeyEvent.VK_DELETE){
+                    Downloads downloads = Downloads.getInstance();
+                    List<Download> list = singleton.getSelectedValuesList();
+                    for (Download download:
+                            list) {
+                        downloads.remove(download,0);
+                    }
+                }
             }
         });
     }
@@ -87,19 +99,27 @@ public class DownloadList extends JList<Entity> {
         return "Downloads";
     }
 
-    public static DownloadList getIntsance(DefaultListModel<Entity> listModel) {
+    public static DownloadList getInstance(DefaultListModel<Download> listModel) {
         if (singleton == null) {
             singleton = new DownloadList(listModel);
         }
         return singleton;
     }
 
+    public boolean isActivePanel() {
+        return activePanel;
+    }
+
+    public void setActivePanel(boolean activePanel) {
+        this.activePanel = activePanel;
+    }
+
     @Override
-    public ListCellRenderer<? super Entity> getCellRenderer() {
+    public ListCellRenderer<? super Download> getCellRenderer() {
         return super.getCellRenderer();
     }
 
-    private class CellRenderer extends DownloadListContent implements ListCellRenderer<Entity> {
+    private class CellRenderer extends DownloadListContent implements ListCellRenderer<Download> {
 
         //TODO:Assign a Generic Type and complete the renderer
         CellRenderer() {
@@ -107,7 +127,7 @@ public class DownloadList extends JList<Entity> {
         }
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends Entity> list, Entity value, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<? extends Download> list, Download value, int index, boolean isSelected, boolean cellHasFocus) {
             if (isSelected) {
                 setBackground(selectionBG);
                 setForeground(selectionBG);

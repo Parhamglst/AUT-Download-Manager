@@ -1,17 +1,16 @@
-import GUI.Entity;
+import Utils.Download;
 import GUI.MainFrame;
+import Utils.Downloads;
 
 import javax.swing.*;
+import java.net.URL;
 
 public class Main {
     public static final String ICON_PACK = "./Icons/";
 
     public static void main(String[] args) {
         MainFrame.setLookAndFeel(4);
-        DefaultListModel<Entity> listModel = new DefaultListModel<>();
-        listModel.addElement(new Entity("dsa", "dsa"));
-        listModel.addElement(new Entity("dsa", "dsa"));
-        MainFrame gui = MainFrame.getInstance("Another Download Manager",listModel, listModel);
+        MainFrame gui = MainFrame.getInstance("Another Download Manager");
         gui.setLocationRelativeTo(null);
     }
 }
